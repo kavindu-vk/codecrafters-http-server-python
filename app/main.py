@@ -1,12 +1,30 @@
 # Uncomment this to pass the first stage
 import socket
 
+def parse_request(request_data):
+    lines = request_data.split('\r\n')
+    start_line = lines[0]
+    method, path, version = start_line.split(' ')
+    return method, path, version
+
+# return the HTTP response for given path
+def get_response(path):
+    response = {
+        "/": "HTTP/1.1 200 OK\r\n\r\n",
+    }
+
+    # default response if path not found
+    default_response = "HTTP/1.1 404 Not Found\r\n\r\n"
+
+    return response.get(path, default_response)
+
 def handle_request(client_socket):
     # Read data from the client
-    client_socket.recv(1024) #Reading a bit of data
+    request_data = client_socket.recv(1024).decode() #Reading a bit of data
+    method, path, version = parse_request(request_data)
 
     # send a 200 OK response
-    response = "HTTP/1.1 200 OK\r\n\r\n"
+    response = get_response(path)
     client_socket.send(response.encode())
 
 def main():
