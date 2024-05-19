@@ -85,7 +85,7 @@ def handle_request(client_socket, directory):
 
 def main():
     parser = argparse.ArgumentParser(description='Simple HTTP server')
-    parser.add_argument('--directory', required=True, help='Directory to serve files from')
+    parser.add_argument('--directory', type=str, help='Directory to serve files from')
     args = parser.parse_args()
 
     global base_directory
