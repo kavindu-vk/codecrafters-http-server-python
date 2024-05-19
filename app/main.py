@@ -5,16 +5,36 @@ def parse_request(request_data):
     lines = request_data.split('\r\n')
     start_line = lines[0]
     method, path, version = start_line.split(' ')
-    return method, path, version
+
+    headers = {}
+    for line in lines[1:]:
+        if line == '':
+            break
+        key, value = line.split(': ', 1)
+        headers[key] = value
+        
+    return method, path, version, headers
 
 # return the HTTP response for given path
-def get_response(path):
+def get_response(path, headers):
     if path.startswith("/echo/"):
         echo_str = path[len('/echo/'):]
         response_body = echo_str
         response = (
             "HTTP/1.1 200 OK\r\n"
             f"Content-Type: text/plain\r\n"
+            f"Content-Length: {len(response_body)}\r\n"
+            "\r\n"
+            f"{response_body}"
+        )
+        return response
+    
+    if path == '/user-agent':
+        user_agent = headers.get("user-agent", "unknown")
+        response_body = user_agent
+        response = (
+            "HTTP/1.1 200 OK\r\n"
+            "Content-Type: text/plain\r\n"
             f"Content-Length: {len(response_body)}\r\n"
             "\r\n"
             f"{response_body}"
@@ -41,10 +61,10 @@ def get_response(path):
 def handle_request(client_socket):
     # Read data from the client
     request_data = client_socket.recv(1024).decode() #Reading a bit of data
-    method, path, version = parse_request(request_data)
+    method, path, version, headers = parse_request(request_data)
 
     # send a 200 OK response
-    response = get_response(path)
+    response = get_response(path, headers)
     client_socket.send(response.encode())
 
 def main():
