@@ -1,9 +1,7 @@
 # Uncomment this to pass the first stage
 import socket
-import argparse
-import os
 import sys
-import threading
+import os
 
 def parse_request(request_data):
     lines = request_data.split('\r\n')
@@ -78,35 +76,20 @@ def get_response(path, headers, directory):
         
 
 def handle_request(client_socket, directory):
-    try:
-        # Read data from the client
-        request_data = client_socket.recv(1024).decode()
-        method, path, version, headers = parse_request(request_data)
+    # Read data from the client
+    request_data = client_socket.recv(1024).decode() #Reading a bit of data
+    method, path, version, headers = parse_request(request_data)
 
-        # Get the response based on the request path
-        response = get_response(path, headers, directory)
-        
-        # Send the response to the client
-        if isinstance(response, str):
-            response = response.encode()
-        client_socket.send(response)
-
-    except Exception as e:
-        print(f"Error occurred while handling request: {e}")
-
-    finally:
-        try:
-            # Close the connection to the client
-            client_socket.close()
-        except Exception as e:
-            print(f"Error occurred while closing socket: {e}")
+    # send a 200 OK response
+    response = get_response(path, headers, directory)
+    client_socket.send(response if isinstance(response, bytes) else response.encode())
 
 def main():
-    parser = argparse.ArgumentParser(description="Simple HTTP server.")
-    parser.add_argument('--directory', required=True, help="Directory to serve files from")
-    args = parser.parse_args()
+    if len(sys.argv) != 3 or sys.argv[1] != '--directory':
+        print("Usage: ./your_server.sh --directory <directory>")
+        sys.exit(1)
 
-    directory = args.directory
+    directory = sys.argv[2]
 
     # Ensure the provided directory exists
     if not os.path.isdir(directory):
@@ -120,7 +103,6 @@ def main():
     # Uncomment this to pass the first stage
     #
     server_socket = socket.create_server(("localhost", 4221))
-    server_socket.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     print("server is running on port 4221")
 
     try:
@@ -130,9 +112,8 @@ def main():
 
             print(f"connection from {addr} has been eshtablished.")
 
-             # Handle the client request in a new thread
-            thread = threading.Thread(target=handle_request, args=(client_socket, directory))
-            thread.start()
+            # handle the client request
+            handle_request(client_socket, directory)
 
             # close the connection to the client
             client_socket.close()
