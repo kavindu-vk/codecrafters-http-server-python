@@ -56,7 +56,7 @@ def get_response(path, headers, directory):
                 "\r\n"
             ).encode() + response_body
             return response
-        return "HTTP/1.1 404 Not Found\r\n\r\n"
+        return "HTTP/1.1 404 Not Found\r\n\r\n".encode()
     
     if path == "/":
         response_body = "Welcome to the HTTP server!"
