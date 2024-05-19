@@ -78,13 +78,19 @@ def get_response(path, headers, directory):
         
 
 def handle_request(client_socket, directory):
-    # Read data from the client
-    request_data = client_socket.recv(1024).decode() #Reading a bit of data
-    method, path, version, headers = parse_request(request_data)
+    try:
+        # Read data from the client
+        request_data = client_socket.recv(1024).decode()
+        method, path, version, headers = parse_request(request_data)
 
-    # send a 200 OK response
-    response = get_response(path, headers, directory)
-    client_socket.send(response if isinstance(response, bytes) else response.encode())
+        # Get the response based on the request path
+        response = get_response(path, headers, directory)
+        
+        # Send the response to the client
+        client_socket.send(response if isinstance(response, bytes) else response.encode())
+    finally:
+        # Close the connection to the client
+        client_socket.close()
 
 def main():
     parser = argparse.ArgumentParser(description="Simple HTTP server.")
