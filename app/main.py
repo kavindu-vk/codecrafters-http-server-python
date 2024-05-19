@@ -86,7 +86,7 @@ def handle_request(client_socket, directory):
 
 def main():
     if len(sys.argv) != 3 or sys.argv[1] != '--directory':
-        print("Usage: ./your_server.sh --directory <directory>")
+        print("Usage: ./your_server.py --directory <directory>")
         sys.exit(1)
 
     directory = sys.argv[2]
