@@ -9,14 +9,34 @@ def parse_request(request_data):
 
 # return the HTTP response for given path
 def get_response(path):
-    response = {
-        "/": "HTTP/1.1 200 OK\r\n\r\n",
-    }
+    if path.startswith("/echo/"):
+        echo_str = path[len('/echo/'):]
+        response_body = echo_str
+        response = (
+            "HTTP/1.1 200 OK\r\n"
+            f"Content-Type: text/plain\r\n"
+            f"Content-Length: {len(response_body)}\r\n"
+            "\r\n"
+            f"{response_body}"
+        )
+        return response
+    
+    if path == "/":
+        response_body = "Welcome to the HTTP server!"
+        response = (
+            "HTTP 1.1 200 OK\r\n"
+            f"Content-Type: text/plain\r\n"
+            f"Content-Length: {len(response_body)}\r\n"
+            "\r\n"
+            f"{response_body}"
+        )
+        return response
 
     # default response if path not found
     default_response = "HTTP/1.1 404 Not Found\r\n\r\n"
+    return default_response
 
-    return response.get(path, default_response)
+        
 
 def handle_request(client_socket):
     # Read data from the client
