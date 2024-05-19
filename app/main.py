@@ -22,7 +22,7 @@ def get_response(path, headers):
         response_body = echo_str
         response = (
             "HTTP/1.1 200 OK\r\n"
-            f"Content-Type: text/plain\r\n"
+            "Content-Type: text/plain\r\n"
             f"Content-Length: {len(response_body)}\r\n"
             "\r\n"
             f"{response_body}"
@@ -45,7 +45,7 @@ def get_response(path, headers):
         response_body = "Welcome to the HTTP server!"
         response = (
             "HTTP/1.1 200 OK\r\n"
-            f"Content-Type: text/plain\r\n"
+            "Content-Type: text/plain\r\n"
             f"Content-Length: {len(response_body)}\r\n"
             "\r\n"
             f"{response_body}"
