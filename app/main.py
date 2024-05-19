@@ -24,7 +24,7 @@ def get_response(path):
     if path == "/":
         response_body = "Welcome to the HTTP server!"
         response = (
-            "HTTP 1.1 200 OK\r\n"
+            "HTTP/1.1 200 OK\r\n"
             f"Content-Type: text/plain\r\n"
             f"Content-Length: {len(response_body)}\r\n"
             "\r\n"
