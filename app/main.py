@@ -1,5 +1,8 @@
 # Uncomment this to pass the first stage
 import socket
+import argparse
+import os
+import sys
 
 def parse_request(request_data):
     lines = request_data.split('\r\n')
@@ -16,7 +19,7 @@ def parse_request(request_data):
     return method, path, version, headers
 
 # return the HTTP response for given path
-def get_response(path, headers):
+def get_response(path, headers, directory):
     if path.startswith("/echo/"):
         echo_str = path[len('/echo/'):]
         response_body = echo_str
@@ -41,6 +44,21 @@ def get_response(path, headers):
         )
         return response
     
+    if path.startswith("/files/"):
+        filename = path[len('/files/'):]
+        file_path = os.path.join(directory, filename)
+        if os.path.isfile(file_path):
+            with open(file_path, 'rb') as f:
+                response_body = f.read()
+            response = (
+                "HTTP/1.1 200 OK\r\n"
+                "Content-Type: application/octet-stream\r\n"
+                f"Content-Length: {len(response_body)}\r\n"
+                "\r\n"
+            ).encode() + response_body
+            return response
+        return "HTTP/1.1 404 Not Found\r\n\r\n"
+    
     if path == "/":
         response_body = "Welcome to the HTTP server!"
         response = (
@@ -58,16 +76,28 @@ def get_response(path, headers):
 
         
 
-def handle_request(client_socket):
+def handle_request(client_socket, directory):
     # Read data from the client
     request_data = client_socket.recv(1024).decode() #Reading a bit of data
     method, path, version, headers = parse_request(request_data)
 
     # send a 200 OK response
-    response = get_response(path, headers)
-    client_socket.send(response.encode())
+    response = get_response(path, headers, directory)
+    client_socket.send(response if isinstance(response, bytes) else response.encode())
 
 def main():
+    parser = argparse.ArgumentParser(description="Simple HTTP server.")
+    parser.add_argument('--directory', required=True, help="Directory to serve files from")
+    args = parser.parse_args()
+
+    directory = args.directory
+
+    # Ensure the provided directory exists
+    if not os.path.isdir(directory):
+        print(f"Error: Directory '{directory}' does not exist.")
+        sys.exit(1)
+
+
     # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
 
@@ -84,7 +114,7 @@ def main():
             print(f"connection from {addr} has been eshtablished.")
 
             # handle the client request
-            handle_request(client_socket)
+            handle_request(client_socket, directory)
 
             # close the connection to the client
             client_socket.close()
