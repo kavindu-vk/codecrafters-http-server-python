@@ -95,8 +95,11 @@ def handle_request(client_socket, directory):
         print(f"Error occurred while handling request: {e}")
 
     finally:
-        # Close the connection to the client
-        client_socket.close()
+        try:
+            # Close the connection to the client
+            client_socket.close()
+        except Exception as e:
+            print(f"Error occurred while closing socket: {e}")
 
 def main():
     parser = argparse.ArgumentParser(description="Simple HTTP server.")
