@@ -87,7 +87,13 @@ def handle_request(client_socket, directory):
         response = get_response(path, headers, directory)
         
         # Send the response to the client
-        client_socket.send(response if isinstance(response, bytes) else response.encode())
+        if isinstance(response, str):
+            response = response.encode()
+        client_socket.send(response)
+
+    except Exception as e:
+        print(f"Error occurred while handling request: {e}")
+
     finally:
         # Close the connection to the client
         client_socket.close()
