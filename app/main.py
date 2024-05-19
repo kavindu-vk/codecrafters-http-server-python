@@ -88,11 +88,10 @@ def main():
     parser.add_argument('--directory', type=str, help='Directory to serve files from')
     args = parser.parse_args()
 
-    global base_directory
-    base_directory = args.directory
+    directory = args.directory
 
-    if not os.path.isdir(base_directory):
-        print(f"Error: Directory '{base_directory}' does not exist.")
+    if not os.path.isdir(directory):
+        print(f"Error: Directory '{directory}' does not exist.")
         sys.exit(1)
 
     print("Logs from your program will appear here!")
@@ -105,7 +104,7 @@ def main():
             print("waiting for connection")
             client_socket, addr = server_socket.accept()
             print(f"connection from {addr} has been established.")
-            client_thread = threading.Thread(target=handle_request, args=(client_socket, base_directory))
+            client_thread = threading.Thread(target=handle_request, args=(client_socket, directory))
             client_thread.start()
     except KeyboardInterrupt:
         print("\nServer is shutting down.")
