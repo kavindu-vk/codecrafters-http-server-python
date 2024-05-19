@@ -30,7 +30,7 @@ def get_response(path, headers):
         return response
     
     if path == '/user-agent':
-        user_agent = headers.get("user-agent", "unknown")
+        user_agent = headers.get("User-Agent", "Unknown")
         response_body = user_agent
         response = (
             "HTTP/1.1 200 OK\r\n"
