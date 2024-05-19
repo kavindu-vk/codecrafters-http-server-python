@@ -1,7 +1,8 @@
-# Uncomment this to pass the first stage
 import socket
 import sys
 import os
+import argparse
+import threading
 
 def parse_request(request_data):
     lines = request_data.split('\r\n')
@@ -17,7 +18,6 @@ def parse_request(request_data):
         
     return method, path, version, headers
 
-# return the HTTP response for given path
 def get_response(path, headers, directory):
     if path.startswith("/echo/"):
         echo_str = path[len('/echo/'):]
@@ -69,60 +69,48 @@ def get_response(path, headers, directory):
         )
         return response
 
-    # default response if path not found
     default_response = "HTTP/1.1 404 Not Found\r\n\r\n"
     return default_response
 
-        
-
 def handle_request(client_socket, directory):
-    # Read data from the client
-    request_data = client_socket.recv(1024).decode() #Reading a bit of data
-    method, path, version, headers = parse_request(request_data)
-
-    # send a 200 OK response
-    response = get_response(path, headers, directory)
-    client_socket.send(response if isinstance(response, bytes) else response.encode())
+    try:
+        request_data = client_socket.recv(1024).decode()
+        method, path, version, headers = parse_request(request_data)
+        response = get_response(path, headers, directory)
+        client_socket.send(response if isinstance(response, bytes) else response.encode())
+    except Exception as e:
+        print(f"Error handling request: {e}")
+    finally:
+        client_socket.close()
 
 def main():
-    if len(sys.argv) != 3 or sys.argv[1] != '--directory':
-        print("Usage: ./main.py --directory <directory>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description='Simple HTTP server')
+    parser.add_argument('--directory', required=True, help='Directory to serve files from')
+    args = parser.parse_args()
 
-    directory = sys.argv[2]
+    directory = args.directory
 
-    # Ensure the provided directory exists
     if not os.path.isdir(directory):
         print(f"Error: Directory '{directory}' does not exist.")
         sys.exit(1)
 
-
-    # You can use print statements as follows for debugging, they'll be visible when running tests.
     print("Logs from your program will appear here!")
 
-    # Uncomment this to pass the first stage
-    #
     server_socket = socket.create_server(("localhost", 4221))
     print("server is running on port 4221")
 
     try:
         while True:
             print("waiting for connection")
-            client_socket, addr = server_socket.accept() # wait for client
-
-            print(f"connection from {addr} has been eshtablished.")
-
-            # handle the client request
-            handle_request(client_socket, directory)
-
-            # close the connection to the client
-            client_socket.close()
+            client_socket, addr = server_socket.accept()
+            print(f"connection from {addr} has been established.")
+            client_thread = threading.Thread(target=handle_request, args=(client_socket, directory))
+            client_thread.start()
     except KeyboardInterrupt:
         print("\nServer is shutting down.")
     finally:
         server_socket.close()
         print("server has been shut down.")
-
 
 if __name__ == "__main__":
     main()
