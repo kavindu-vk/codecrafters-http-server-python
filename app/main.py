@@ -90,9 +90,7 @@ def main():
 
     directory = args.directory
 
-    if not os.path.isdir(directory):
-        print(f"Error: Directory '{directory}' does not exist.")
-        sys.exit(1)
+    
 
     print("Logs from your program will appear here!")
 
