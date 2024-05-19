@@ -106,6 +106,10 @@ def main():
     print("server is running on port 4221")
 
     try:
+        server_socket = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        server_socket.bind(("localhost", 4221))
+        server_socket.listen(5)
+        print("Server is running on port 4221")
         while True:
             print("waiting for connection")
             client_socket, addr = server_socket.accept() # wait for client
