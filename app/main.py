@@ -1,7 +1,9 @@
 # Uncomment this to pass the first stage
 import socket
-import sys
+import argparse
 import os
+import sys
+import threading
 
 def parse_request(request_data):
     lines = request_data.split('\r\n')
@@ -85,11 +87,11 @@ def handle_request(client_socket, directory):
     client_socket.send(response if isinstance(response, bytes) else response.encode())
 
 def main():
-    if len(sys.argv) != 3 or sys.argv[1] != '--directory':
-        print("Usage: ./your_server.sh --directory <directory>")
-        sys.exit(1)
+    parser = argparse.ArgumentParser(description="Simple HTTP server.")
+    parser.add_argument('--directory', required=True, help="Directory to serve files from")
+    args = parser.parse_args()
 
-    directory = sys.argv[2]
+    directory = args.directory
 
     # Ensure the provided directory exists
     if not os.path.isdir(directory):
@@ -112,8 +114,9 @@ def main():
 
             print(f"connection from {addr} has been eshtablished.")
 
-            # handle the client request
-            handle_request(client_socket, directory)
+             # Handle the client request in a new thread
+            thread = threading.Thread(target=handle_request, args=(client_socket, directory))
+            thread.start()
 
             # close the connection to the client
             client_socket.close()
