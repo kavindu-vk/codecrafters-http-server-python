@@ -3,6 +3,8 @@ import sys
 import os
 import argparse
 import threading
+import gzip
+from io import BytesIO
 
 def parse_request(request_data):
     headers_part, body = request_data.split('\r\n\r\n', 1)
@@ -31,6 +33,12 @@ def save_file(path, body, directory):
     )
     return response
 
+def gzip_compress(data):
+    buf = BytesIO()
+    with gzip.GzipFile(fileobj=buf, mode='wb') as f:
+        f.write(data.encode())
+    return buf.getvalue()
+
 def get_response(method, path, headers, body, directory):
     if method == "POST" and path.startswith("/files/"):
         return save_file(path, body, directory)
@@ -40,6 +48,7 @@ def get_response(method, path, headers, body, directory):
         response_body = echo_str
         content_encoding = ""
         if "accept-encoding" in headers and "gzip" in headers["accept-encoding"]:
+            response_body = gzip_compress(response_body)
             content_encoding = "Content-Encoding: gzip\r\n"
         
         response = (
@@ -50,6 +59,11 @@ def get_response(method, path, headers, body, directory):
             "\r\n"
             f"{response_body}"
         )
+
+        if isinstance(response_body, bytes):
+            response = response.encode() + response_body
+        else:
+            response += response_body
         return response
     
     if path == '/user-agent':
