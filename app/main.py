@@ -5,20 +5,36 @@ import argparse
 import threading
 
 def parse_request(request_data):
-    lines = request_data.split('\r\n')
+    headers_part, body = request_data.split('\r\n\r\n', 1)
+    lines = headers_part.split('\r\n')
     start_line = lines[0]
     method, path, version = start_line.split(' ')
 
-    headers = {}
+    headers_dict = {}
     for line in lines[1:]:
-        if line == '':
-            break
-        key, value = line.split(': ', 1)
-        headers[key] = value
-        
-    return method, path, version, headers
+        if ': ' in line:
+            key, value = line.split(': ', 1)
+            headers_dict[key] = value
 
-def get_response(path, headers, directory):
+    return method, path, version, headers_dict, body
+
+def save_file(path, body, directory):
+    filename = path[len('/files/'):]
+    file_path = os.path.join(directory, filename)
+    with open(file_path, 'wb') as f:
+        f.write(body.encode())
+    response = (
+        "HTTP/1.1 201 Created\r\n"
+        "Content-Type: text/plain\r\n"
+        "Content-Length: 0\r\n"
+        "\r\n"
+    )
+    return response
+
+def get_response(method, path, headers, body, directory):
+    if method == "POST" and path.startswith("/files/"):
+        return save_file(path, body, directory)
+    
     if path.startswith("/echo/"):
         echo_str = path[len('/echo/'):]
         response_body = echo_str
@@ -43,7 +59,7 @@ def get_response(path, headers, directory):
         )
         return response
     
-    if path.startswith("/files/"):
+    if path.startswith("/files/") and method == "GET":
         filename = path[len('/files/'):]
         file_path = os.path.join(directory, filename)
         if os.path.isfile(file_path):
@@ -75,8 +91,8 @@ def get_response(path, headers, directory):
 def handle_request(client_socket, directory):
     try:
         request_data = client_socket.recv(1024).decode()
-        method, path, version, headers = parse_request(request_data)
-        response = get_response(path, headers, directory)
+        method, path, version, headers, body = parse_request(request_data)
+        response = get_response(method, path, headers, body, directory)
         client_socket.send(response if isinstance(response, bytes) else response.encode())
     except Exception as e:
         print(f"Error handling request: {e}")
@@ -89,8 +105,6 @@ def main():
     args = parser.parse_args()
 
     directory = args.directory
-
-    
 
     print("Logs from your program will appear here!")
 
