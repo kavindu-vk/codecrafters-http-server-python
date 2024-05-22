@@ -14,7 +14,7 @@ def parse_request(request_data):
     for line in lines[1:]:
         if ': ' in line:
             key, value = line.split(': ', 1)
-            headers_dict[key] = value
+            headers_dict[key.lower()] = value   # Use lowercase for case-insensitive comparison
 
     return method, path, version, headers_dict, body
 
@@ -38,8 +38,13 @@ def get_response(method, path, headers, body, directory):
     if path.startswith("/echo/"):
         echo_str = path[len('/echo/'):]
         response_body = echo_str
+        content_encoding = ""
+        if "accept-encoding" in headers and "gzip" in headers["accept-encoding"]:
+            content_encoding = "Content-Encoding: gzip\r\n"
+
         response = (
             "HTTP/1.1 200 OK\r\n"
+            f"{content_encoding}"
             "Content-Type: text/plain\r\n"
             f"Content-Length: {len(response_body)}\r\n"
             "\r\n"
