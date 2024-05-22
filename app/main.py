@@ -57,9 +57,7 @@ def get_response(method, path, headers, body, directory):
             "Content-Type: text/plain\r\n"
             f"Content-Length: {len(response_body)}\r\n"
             "\r\n"
-            f"{response_body}"
         )
-
         if isinstance(response_body, bytes):
             response = response.encode() + response_body
         else:
